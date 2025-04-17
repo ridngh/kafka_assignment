@@ -1,0 +1,33 @@
+# Kafka Producer: Streaming Air Quality Data
+
+This script is my producer-side implementation for streaming data from the UCI Air Quality dataset into a Kafka topic (`aq_data`) using `kafka-python`.
+
+## Why I Built It
+
+I wanted to simulate a real-time data stream for air quality monitoring, where each row from the dataset is treated as a real-time sensor reading. Instead of pushing everything at once, I introduce a slight delay between messages to mimic live data flow. This setup will help test downstream consumers that process, visualize, or model this data in real time.
+
+## Preprocessing Approach
+
+One of the key things I decided on was how to handle missing values. The dataset marks missing sensor values as `-200`, which I replaced with `np.nan`. I **intentionally avoided statistical imputation** (like filling with mean/median) because:
+
+- That kind of processing usually makes more sense on the **consumer side**, where you have the full dataset or access to historical context.
+- I wanted the producer to remain lightweight and close to a "raw" data stream, just like what you'd get from sensors in a real-world deployment.
+- It is important to visualize when sensors are down which is not possible if missing values are imputed in producers.
+
+So, in this stage, I just clean and prepare the data structurally, not statistically.
+
+## Steps in the Script
+
+- Read the Excel file (`AirQualityUCI.xlsx`, sheet `AirQualityUCI`).
+- Convert `Date` and `Time` columns to strings for easier serialization.
+- Replace all `-200` values with `NaN`.
+- Convert other columns to numeric types safely.
+- Send each row as a JSON message to the Kafka topic `aq_data` with a short delay (0.01s) between sends.
+- Flush and close the Kafka producer gracefully.
+
+## What You’ll Need
+
+- Kafka running locally on `localhost:9092`.
+- Python dependencies:
+  ```bash
+  pip install kafka-python pandas numpy openpyxl
